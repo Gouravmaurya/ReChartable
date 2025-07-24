@@ -9,9 +9,6 @@ const getBaseURL = () => {
   return import.meta.env.VITE_API_URL || 'https://re-chartable-tra2.vercel.app/api/v1';
 };
 
-// Get CORS origin from environment
-const CORS_ORIGIN = import.meta.env.VITE_CORS_ORIGIN || 'https://re-chartable.vercel.app';
-
 // Create an axios instance with default config
 const api = axios.create({
   baseURL: getBaseURL(),
@@ -20,7 +17,51 @@ const api = axios.create({
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   },
+  // Important for CORS with credentials
+  withCredentials: true,
+  crossDomain: true
 });
+
+// Add a request interceptor to include the auth token
+api.interceptors.request.use(config => {
+  // Get token from local storage
+  const token = localStorage.getItem('token');
+  
+  // If token exists, add it to the headers
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  
+  // Add CORS headers
+  config.headers['Access-Control-Allow-Origin'] = 'https://re-chartable.vercel.app';
+  config.headers['Access-Control-Allow-Methods'] = 'GET,PUT,POST,DELETE,PATCH,OPTIONS';
+  config.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization';
+  config.headers['Access-Control-Allow-Credentials'] = 'true';
+  
+  return config;
+}, error => {
+  return Promise.reject(error);
+});
+
+// Add a response interceptor to handle errors
+api.interceptors.response.use(
+  response => response,
+  error => {
+    // Handle errors
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      console.error('Response error:', error.response.status, error.response.data);
+    } else if (error.request) {
+      // The request was made but no response was received
+      console.error('Request error:', error.request);
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      console.error('Error:', error.message);
+    }
+    return Promise.reject(error);
+  }
+);
 
 // Simple request interceptor for auth token
 api.interceptors.request.use(
