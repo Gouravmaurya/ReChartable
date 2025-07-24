@@ -20,10 +20,24 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/api/, '/api/v1'),
           secure: false,
+          configure: (proxy, _options) => {
+            proxy.on('proxyRes', (proxyRes, _req, _res) => {
+              // Add CORS headers to the response
+              proxyRes.headers['Access-Control-Allow-Origin'] = '*';
+              proxyRes.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS';
+              proxyRes.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization';
+              proxyRes.headers['Access-Control-Allow-Credentials'] = 'true';
+            });
+          },
         },
       },
       hmr: {
         clientPort: 5173,
+      },
+      cors: {
+        origin: '*',
+        methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+        credentials: true,
       },
     },
     build: {

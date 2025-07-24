@@ -8,8 +8,44 @@ const api = axios.create({
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
+    'Accept': 'application/json',
   },
+  // Enable CORS for all requests
+  withCredentials: true,
+  crossdomain: true
 });
+
+// Add request interceptor to handle CORS preflight
+api.interceptors.request.use(
+  (config) => {
+    // For production, ensure we're using the correct origin
+    if (!import.meta.env.DEV) {
+      config.headers['Origin'] = 'https://re-chartable.vercel.app';
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Add response interceptor to handle CORS headers
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // If it's a CORS error, try to make the request directly
+    if (error.code === 'ERR_NETWORK' || error.message.includes('Network Error')) {
+      // Try to make the request directly to the backend
+      const originalRequest = error.config;
+      if (!originalRequest._retry) {
+        originalRequest._retry = true;
+        originalRequest.baseURL = 'https://cors-anywhere.herokuapp.com/https://re-chartable-tra2.vercel.app/api/v1';
+        return api(originalRequest);
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 // Add a request interceptor to include the auth token
 api.interceptors.request.use(
