@@ -5,7 +5,7 @@ import { authAPI } from '../../utils/api';
 import { toast } from 'react-hot-toast';
 import { FiMail, FiLock, FiMic, FiLoader, FiArrowRight } from 'react-icons/fi';
 
-const Login = () => {
+const Register = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
