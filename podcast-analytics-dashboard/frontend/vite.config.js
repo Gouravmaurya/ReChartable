@@ -20,14 +20,11 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/api/, '/api/v1'),
           secure: false,
-          configure: (proxy, _options) => {
-            proxy.on('proxyRes', (proxyRes, _req, _res) => {
-              // Add CORS headers to the response
-              proxyRes.headers['Access-Control-Allow-Origin'] = '*';
-              proxyRes.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS';
-              proxyRes.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization';
-              proxyRes.headers['Access-Control-Allow-Credentials'] = 'true';
-            });
+          headers: {
+            'Access-Control-Allow-Origin': 'https://re-chartable.vercel.app',
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+            'Access-Control-Allow-Credentials': 'true',
           },
         },
       },
@@ -35,7 +32,7 @@ export default defineConfig(({ mode }) => {
         clientPort: 5173,
       },
       cors: {
-        origin: '*',
+        origin: 'https://re-chartable.vercel.app',
         methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
         credentials: true,
       },

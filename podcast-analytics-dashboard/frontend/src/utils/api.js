@@ -1,48 +1,44 @@
 import axios from 'axios';
 
+// Determine the base URL based on environment
+const getBaseURL = () => {
+  if (import.meta.env.DEV) {
+    return '/api';  // Use proxy in development
+  }
+  // In production, use the configured API URL
+  return import.meta.env.VITE_API_URL || 'https://re-chartable-tra2.vercel.app/api/v1';
+};
+
+// Get CORS origin from environment
+const CORS_ORIGIN = import.meta.env.VITE_CORS_ORIGIN || 'https://re-chartable.vercel.app';
+
 // Create an axios instance with default config
 const api = axios.create({
-  baseURL: import.meta.env.DEV 
-    ? '/api'  // Use proxy in development
-    : 'https://re-chartable-tra2.vercel.app/api/v1',  // Direct API call in production
+  baseURL: getBaseURL(),
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   },
-  // Enable CORS for all requests
-  withCredentials: true,
-  crossdomain: true
 });
 
-// Add request interceptor to handle CORS preflight
+// Simple request interceptor for auth token
 api.interceptors.request.use(
   (config) => {
-    // For production, ensure we're using the correct origin
-    if (!import.meta.env.DEV) {
-      config.headers['Origin'] = 'https://re-chartable.vercel.app';
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Add response interceptor to handle CORS headers
+// Response interceptor for error handling
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // If it's a CORS error, try to make the request directly
-    if (error.code === 'ERR_NETWORK' || error.message.includes('Network Error')) {
-      // Try to make the request directly to the backend
-      const originalRequest = error.config;
-      if (!originalRequest._retry) {
-        originalRequest._retry = true;
-        originalRequest.baseURL = 'https://cors-anywhere.herokuapp.com/https://re-chartable-tra2.vercel.app/api/v1';
-        return api(originalRequest);
-      }
-    }
+    // Handle specific error cases if needed
     return Promise.reject(error);
   }
 );
