@@ -1,23 +1,23 @@
-// Login.jsx
+// Register.jsx
 import { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+// Icons replaced with inline SVGs
 import { authAPI } from '../../utils/api';
 import { toast } from 'react-hot-toast';
-import { FiMail, FiLock, FiMic, FiLoader, FiArrowRight } from 'react-icons/fi';
 
 const Register = () => {
   const [formData, setFormData] = useState({
+    name: '',
     email: '',
     password: '',
+    confirmPassword: '',
   });
-  const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [formErrors, setFormErrors] = useState({});
   const navigate = useNavigate();
-  const location = useLocation();
-  const from = location.state?.from?.pathname || '/dashboard';
 
-  const { email, password } = formData;
+  const { name, email, password, confirmPassword } = formData;
 
   const handleChange = (e) => {
     setFormData({
@@ -26,179 +26,242 @@ const Register = () => {
     });
   };
 
+  const validateForm = () => {
+    const errors = {};
+
+    if (!name.trim()) {
+      errors.name = 'Name is required';
+    }
+
+    if (!email) {
+      errors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      errors.email = 'Email is invalid';
+    }
+
+    if (!password) {
+      errors.password = 'Password is required';
+    } else if (password.length < 6) {
+      errors.password = 'Password must be at least 6 characters';
+    }
+
+    if (password !== confirmPassword) {
+      errors.confirmPassword = "Passwords don't match";
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
+
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsSubmitting(true);
     setError('');
 
     try {
-      // Validate form
-      if (!email || !password) {
-        throw new Error('Please enter both email and password');
-      }
-
-      // Call login API
-      await authAPI.login({ email, password });
+      // Call register API
+      await authAPI.register({
+        name,
+        email,
+        password,
+        role: 'user' // Default role
+      });
 
       // Show success message
-      toast.success('Successfully logged in!');
+      toast.success('Registration successful! Please log in.');
 
-      // Redirect to the intended page or dashboard
-      navigate(from, { replace: true });
+      // Redirect to login page with success state
+      navigate('/login', {
+        state: {
+          registrationSuccess: true,
+          email // Pre-fill email on login page
+        }
+      });
     } catch (err) {
-      const errorMessage = typeof err === 'string' ? err : 'Failed to sign in. Please check your credentials.';
+      const errorMessage = typeof err === 'string' ? err : 'Failed to create account. Please try again.';
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-black to-gray-900 p-4">
-      <div className="w-full max-w-md">
-        <div className="bg-gray-900/80 backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden border border-gray-700/50">
-          {/* Logo/Branding */}
-          <div className="p-8">
-            <div className="text-center mb-8">
-              <div className="w-16 h-16 bg-gradient-to-r from-gray-500 to-gray-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                <FiMic className="h-8 w-8 text-white" />
-              </div>
-              <h2 className="text-2xl font-bold text-white mb-2">Welcome Back</h2>
-              <p className="text-gray-400">Sign in to your podcast dashboard</p>
-            </div>
-
-            {/* Error Message */}
-            {error && (
-              <div className="mb-6 p-3 bg-red-900/30 border border-red-500/30 text-red-400 text-sm rounded-lg flex items-start">
-                <svg className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>{error}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Email Field */}
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1.5">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <FiMail className="h-5 w-5 text-gray-500" />
-                  </div>
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    required
-                    value={email}
-                    onChange={handleChange}
-                    className="block w-full pl-10 pr-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent transition duration-200"
-                    placeholder="you@example.com"
-                  />
-                </div>
-              </div>
-
-              {/* Password Field */}
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-1.5">
-                  Password
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <FiLock className="h-5 w-5 text-gray-500" />
-                  </div>
-                  <input
-                    id="password"
-                    name="password"
-                    type="password"
-                    autoComplete="current-password"
-                    required
-                    value={password}
-                    onChange={handleChange}
-                    className="block w-full pl-10 pr-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent transition duration-200"
-                    placeholder="********"
-                  />
-                </div>
-              </div>
-
-              {/* Remember Me & Forgot Password */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <input
-                    id="remember-me"
-                    name="remember-me"
-                    type="checkbox"
-                    className="h-4 w-4 text-gray-600 focus:ring-gray-500 border-gray-700 rounded bg-gray-800"
-                  />
-                  <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-300">
-                    Remember me
-                  </label>
-                </div>
-
-                <div className="text-sm">
-                  <a href="#" className="font-medium text-gray-400 hover:text-gray-300 transition-colors">
-                    Forgot your password?
-                  </a>
-                </div>
-              </div>
-
-              {/* Sign In Button */}
-              <div>
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className={`w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg text-base font-medium text-white bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all duration-200 ${
-                    isLoading ? 'opacity-75 cursor-not-allowed' : ''
-                  }`}
-                >
-                  {isLoading ? (
-                    <FiLoader className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" />
-                  ) : (
-                    <FiArrowRight className="w-5 h-5 mr-2" />
-                  )}
-                  {isLoading ? 'Signing In...' : 'Sign In'}
-                </button>
-              </div>
-            </form>
-
-            {/* Divider */}
-            <div className="relative mt-6">
-              <div className="absolute inset-0 flex items-center" aria-hidden="true">
-                <div className="w-full border-t border-gray-700"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-gray-900 text-gray-400">Or continue with</span>
-              </div>
-            </div>
-
-            {/* Google Sign In (example) */}
-            <div className="mt-6">
-              <button
-                type="button"
-                className="w-full flex justify-center items-center py-3 px-4 border border-gray-700 rounded-lg shadow-sm text-base font-medium text-white bg-gray-800 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all duration-200"
-              >
-                <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.75-.067-1.453-.187-2.133H12.48z" />
-                </svg>
-                Sign in with Google
-              </button>
-            </div>
-          </div>
-
-          {/* Sign Up Link */}
-          <div className="p-8 bg-gray-800/80 border-t border-gray-700/50 text-center">
-            <p className="text-gray-400 text-sm">
-              Don't have an account?{' '}
-              <Link to="/register" className="font-medium text-gray-400 hover:text-gray-300 transition-colors">
-                Sign up
-              </Link>
-            </p>
-          </div>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-black to-gray-900 text-white p-4 sm:p-6">
+      <div className="w-full max-w-md space-y-6 sm:space-y-8">
+        <div className="text-center">
+          <h2 className="text-2xl sm:text-3xl font-bold text-white">
+            Create your account
+          </h2>
+          <p className="mt-2 text-sm sm:text-base text-gray-400">
+            Or{' '}
+            <Link to="/login" className="font-medium text-gray-400 hover:text-gray-300 transition-colors">
+              sign in to your existing account
+            </Link>
+          </p>
         </div>
+
+        {error && (
+          <div className="bg-red-900/30 border-l-4 border-red-500 p-4 rounded-r">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-red-200">{error}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <form className="space-y-4 sm:space-y-6 md:space-y-8 lg:space-y-10 xl:space-y-12" onSubmit={handleSubmit}>
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="name" className="sr-only"> Full Name </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  {/* Inline SVG for FiUser */}
+                  <svg className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+                <input
+                  id="name"
+                  name="name"
+                  type="text"
+                  autoComplete="name"
+                  required
+                  value={name}
+                  onChange={handleChange}
+                  className="block w-full pl-10 pr-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent transition duration-200"
+                  placeholder="Full Name"
+                />
+              </div>
+              {formErrors.name && <p className="mt-2 text-sm text-red-400">{formErrors.name}</p>}
+            </div>
+
+            <div>
+              <label htmlFor="email" className="sr-only"> Email Address </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  {/* Inline SVG for FiMail */}
+                  <svg className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8m-9 6h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={handleChange}
+                  className="block w-full pl-10 pr-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent transition duration-200"
+                  placeholder="Email Address"
+                />
+              </div>
+              {formErrors.email && <p className="mt-2 text-sm text-red-400">{formErrors.email}</p>}
+            </div>
+
+            <div>
+              <label htmlFor="password" className="sr-only"> Password </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  {/* Inline SVG for FiLock */}
+                  <svg className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </div>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  value={password}
+                  onChange={handleChange}
+                  className="block w-full pl-10 pr-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent transition duration-200"
+                  placeholder="Password"
+                />
+              </div>
+              {formErrors.password && <p className="mt-2 text-sm text-red-400">{formErrors.password}</p>}
+            </div>
+
+            <div>
+              <label htmlFor="confirmPassword" className="sr-only"> Confirm Password </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  {/* Inline SVG for FiLock */}
+                  <svg className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </div>
+                <input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  value={confirmPassword}
+                  onChange={handleChange}
+                  className="block w-full pl-10 pr-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent transition duration-200"
+                  placeholder="Confirm Password"
+                />
+              </div>
+              {formErrors.confirmPassword && <p className="mt-2 text-sm text-red-400">{formErrors.confirmPassword}</p>}
+            </div>
+          </div>
+
+          <div className="flex items-center">
+            <input
+              id="terms-and-privacy"
+              name="terms-and-privacy"
+              type="checkbox"
+              required
+              className="h-4 w-4 text-gray-600 focus:ring-gray-500 border-gray-700 rounded bg-gray-800"
+            />
+            <label htmlFor="terms-and-privacy" className="ml-2 block text-sm text-gray-400">
+              I agree to the{' '}
+              <a href="#" className="font-medium text-gray-400 hover:text-gray-300 transition-colors">
+                Terms of Service
+              </a>{' '}
+              and{' '}
+              <a href="#" className="font-medium text-gray-400 hover:text-gray-300 transition-colors">
+                Privacy Policy
+              </a>
+            </label>
+          </div>
+
+          <div className="pt-2">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className={`w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg text-base font-medium text-white bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors ${
+                isSubmitting ? 'opacity-75 cursor-not-allowed' : ''
+              }`}
+            >
+              {isSubmitting ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Registering...
+                </>
+              ) : (
+                'Register'
+              )}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
