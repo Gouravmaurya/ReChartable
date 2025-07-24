@@ -137,9 +137,9 @@ const Layout = ({ children }) => {
   ];
 
   return (
-    <div className="flex h-screen bg-gray-950 text-white overflow-hidden relative font-sans">
+    <div className="flex h-screen bg-gradient-to-br from-black to-gray-900 text-white overflow-hidden relative font-sans">
       {/* Mobile Header */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-30 bg-gray-900 border-b border-gray-700 p-4 flex justify-between items-center shadow-md">
+      <div className="md:hidden fixed top-0 left-0 right-0 z-30 bg-transparent border-b border-gray-700 p-4 flex justify-between items-center shadow-md">
         <div className="flex items-center space-x-3">
           <div className="w-9 h-9 rounded-xl bg-gray-700 flex items-center justify-center shadow-inner">
             <FiMic className="text-white" size={20} />
@@ -157,7 +157,7 @@ const Layout = ({ children }) => {
 
       {/* Sidebar */}
       <div
-        className={`fixed md:relative z-20 bg-gray-900 border-r border-gray-800 flex flex-col h-full transition-all duration-300 ease-in-out shadow-lg ${
+        className={`fixed md:relative z-20 bg-transparent border-r border-gray-800 flex flex-col h-full transition-all duration-300 ease-in-out shadow-lg ${
           isSidebarOpen ? 'left-0 w-64 md:w-64' : '-left-full md:left-0 md:w-20 overflow-hidden'
         }`}
         style={{

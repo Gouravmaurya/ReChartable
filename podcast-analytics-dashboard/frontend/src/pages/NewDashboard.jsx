@@ -705,11 +705,11 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black to-gray-900 text-white">
+    <div className="min-h-screen bg-transparent text-white">
       <div className="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
         <h1 className="text-4xl font-extrabold text-white mb-8">Podcast Dashboard</h1>
 
-        <div className="bg-gray-900/80 backdrop-blur-sm rounded-2xl shadow-xl p-6 mb-8 border border-gray-700/50">
+        <div className="bg-transparent backdrop-blur-sm rounded-2xl shadow-xl p-6 mb-8 border border-gray-700/50">
           <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row items-center gap-4">
             <input
               type="text"
@@ -738,8 +738,8 @@ const Dashboard = () => {
           {error && <p className="text-red-400 text-sm mt-3">{error}</p>}
         </div>
 
-        <div className="bg-gray-900/80 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden border border-gray-700/50">
-          <div className="px-6 pt-10 bg-gray-900/80 border-b border-gray-700/50">
+        <div className="bg-transparent backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden border border-gray-700/50">
+          <div className="px-6 pt-10 bg-transparent border-b border-gray-700/50">
             <nav className="flex space-x-3 pb-4">
               {tabs.map((tab) => (
                 <Tab
@@ -753,8 +753,8 @@ const Dashboard = () => {
               ))}
             </nav>
           </div>
-          <div className="p-6 bg-gray-900 rounded-b-xl rounded-tr-xl shadow-inner border-t border-gray-800">
-            <div className="bg-gray-900 p-6 rounded-xl min-h-[500px] border border-gray-800/50">
+          <div className="p-6 bg-transparent rounded-b-xl rounded-tr-xl shadow-inner border-t border-gray-800">
+            <div className="bg-transparent p-6 rounded-xl min-h-[500px] border border-gray-800/50">
               {renderTabContent()}
             </div>
           </div>

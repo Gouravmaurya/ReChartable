@@ -260,6 +260,12 @@ const Register = () => {
                 'Register'
               )}
             </button>
+            <p className="mt-2 text-sm sm:text-base text-gray-400">
+  Or{' '}
+  <Link to="/login" className="font-medium text-gray-400 hover:text-gray-300 transition-colors">
+    sign in to your existing account
+  </Link>
+</p>
           </div>
         </form>
       </div>
